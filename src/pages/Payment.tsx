@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,11 +11,28 @@ const Payment = () => {
   const navigate = useNavigate();
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [booking, setBooking] = useState<any>(null);
+
+  useEffect(() => {
+    fetchBooking();
+  }, [bookingId]);
+
+  const fetchBooking = async () => {
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("*")
+      .eq("id", bookingId)
+      .single();
+
+    if (!error && data) {
+      setBooking(data);
+    }
+  };
 
   const paymentMethods = [
     { id: "wallet", name: "Wallet", icon: Wallet, color: "from-primary to-accent" },
     { id: "card", name: "Credit/Debit Card", icon: CreditCard, color: "from-success to-success/80" },
-    { id: "qr", name: "QR Code", icon: QrCode, color: "from-warning to-warning/80" },
+    { id: "qr", name: "UPI/QR Code", icon: QrCode, color: "from-warning to-warning/80" },
     { id: "cash", name: "Cash", icon: Banknote, color: "from-destructive to-destructive/80" },
   ];
 
@@ -133,7 +150,7 @@ const Payment = () => {
               <div className="pt-3 border-t border-border">
                 <div className="flex justify-between items-center text-lg">
                   <span className="font-semibold">Total Amount</span>
-                  <span className="font-bold text-2xl text-primary">$XX.XX</span>
+                  <span className="font-bold text-2xl text-primary">₹{booking?.total_amount || 0}</span>
                 </div>
               </div>
             </div>

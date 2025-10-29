@@ -116,6 +116,7 @@ export type Database = {
           created_at: string
           id: string
           parking_area_id: string
+          parking_type: string
           slot_number: string
           status: string
         }
@@ -123,6 +124,7 @@ export type Database = {
           created_at?: string
           id?: string
           parking_area_id: string
+          parking_type?: string
           slot_number: string
           status?: string
         }
@@ -130,6 +132,7 @@ export type Database = {
           created_at?: string
           id?: string
           parking_area_id?: string
+          parking_type?: string
           slot_number?: string
           status?: string
         }

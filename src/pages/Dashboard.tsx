@@ -15,18 +15,51 @@ interface ParkingArea {
   hourly_rate: number;
   latitude: number;
   longitude: number;
+  distance?: number;
 }
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [parkingAreas, setParkingAreas] = useState<ParkingArea[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     checkUser();
+    detectUserLocation();
     fetchParkingAreas();
   }, []);
+
+  const detectUserLocation = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+          toast.success("Location detected");
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          toast.error("Could not detect location. Showing all areas.");
+        }
+      );
+    }
+  };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -49,7 +82,22 @@ const Dashboard = () => {
       return;
     }
 
-    setParkingAreas(data || []);
+    let areas = data || [];
+
+    // Sort by distance if location is available
+    if (userLocation) {
+      areas = areas.map(area => ({
+        ...area,
+        distance: calculateDistance(
+          userLocation.lat,
+          userLocation.lng,
+          Number(area.latitude),
+          Number(area.longitude)
+        )
+      })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    }
+
+    setParkingAreas(areas);
   };
 
   const handleLogout = async () => {
@@ -124,7 +172,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Wallet Balance</p>
-                <p className="text-2xl font-bold">$50.00</p>
+                <p className="text-2xl font-bold">₹4,150</p>
               </div>
             </div>
           </Card>
@@ -132,7 +180,9 @@ const Dashboard = () => {
 
         {/* Parking Areas */}
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold">Nearby Parking Areas</h3>
+          <h3 className="text-xl font-semibold">
+            {userLocation ? "Nearby Parking Areas" : "All Parking Areas"}
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {parkingAreas.map((area, index) => (
               <Card
@@ -161,9 +211,15 @@ const Dashboard = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-muted-foreground">Hourly Rate</p>
-                      <p className="font-semibold text-primary">${area.hourly_rate}/hr</p>
+                      <p className="font-semibold text-primary">₹{(area.hourly_rate * 83).toFixed(0)}/hr</p>
                     </div>
                   </div>
+                  
+                  {area.distance && (
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      📍 {area.distance.toFixed(1)} km away
+                    </div>
+                  )}
 
                   <Button className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90">
                     View Slots

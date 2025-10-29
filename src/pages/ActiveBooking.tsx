@@ -105,7 +105,7 @@ const ActiveBooking = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Amount</p>
-                <p className="font-bold text-2xl">${booking?.total_amount}</p>
+                <p className="font-bold text-2xl">₹{booking?.total_amount}</p>
               </div>
             </div>
 

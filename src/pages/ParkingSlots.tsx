@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Calendar, Clock } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Zap, Accessibility, Package } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -11,6 +11,7 @@ interface ParkingSlot {
   id: string;
   slot_number: string;
   status: string;
+  parking_type: string;
 }
 
 interface ParkingArea {
@@ -121,7 +122,7 @@ const ParkingSlots = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in">
           <Card className="p-4 bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
             <p className="text-sm text-muted-foreground">Hourly Rate</p>
-            <p className="text-2xl font-bold text-primary">${area?.hourly_rate}/hr</p>
+            <p className="text-2xl font-bold text-primary">₹{area ? (area.hourly_rate * 83).toFixed(0) : 0}/hr</p>
           </Card>
           <Card className="p-4 bg-gradient-to-br from-success/10 to-success/20 border-success/20">
             <p className="text-sm text-muted-foreground">Available Slots</p>
@@ -136,10 +137,23 @@ const ParkingSlots = () => {
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap gap-4 animate-slide-up">
-          <Badge className={getStatusColor("available")}>● Available</Badge>
-          <Badge className={getStatusColor("occupied")}>● Occupied</Badge>
-          <Badge className={getStatusColor("reserved")}>● Reserved</Badge>
+        <div className="space-y-3 animate-slide-up">
+          <div className="flex flex-wrap gap-3">
+            <Badge className={getStatusColor("available")}>● Available</Badge>
+            <Badge className={getStatusColor("occupied")}>● Occupied</Badge>
+            <Badge className={getStatusColor("reserved")}>● Reserved</Badge>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Badge variant="outline" className="border-success/50">
+              <Zap className="w-3 h-3 mr-1 text-success" /> EV Charging
+            </Badge>
+            <Badge variant="outline" className="border-primary/50">
+              <Accessibility className="w-3 h-3 mr-1 text-primary" /> Handicapped
+            </Badge>
+            <Badge variant="outline" className="border-warning/50">
+              <Package className="w-3 h-3 mr-1 text-warning" /> Cargo
+            </Badge>
+          </div>
         </div>
 
         {/* Parking Grid */}
@@ -165,6 +179,11 @@ const ParkingSlots = () => {
                 style={{ animationDelay: `${index * 20}ms` }}
               >
                 <div className="text-center">
+                  <div className="flex items-center justify-center gap-1 mb-1">
+                    {slot.parking_type === 'ev' && <Zap className="w-4 h-4 text-success" />}
+                    {slot.parking_type === 'handicapped' && <Accessibility className="w-4 h-4 text-primary" />}
+                    {slot.parking_type === 'cargo' && <Package className="w-4 h-4 text-warning" />}
+                  </div>
                   <p className="font-bold text-lg">{slot.slot_number}</p>
                   <p className="text-xs mt-1 capitalize">{slot.status}</p>
                 </div>

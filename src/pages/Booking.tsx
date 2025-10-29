@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Calendar, Clock, DollarSign } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, IndianRupee } from "lucide-react";
 import { toast } from "sonner";
 
 const Booking = () => {
@@ -45,7 +45,7 @@ const Booking = () => {
 
   const calculateTotal = () => {
     if (!area) return 0;
-    return (Number(area.hourly_rate) * hours).toFixed(2);
+    return (Number(area.hourly_rate) * 83 * hours).toFixed(0);
   };
 
   const handleBooking = async () => {
@@ -130,7 +130,7 @@ const Booking = () => {
               </div>
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Hourly Rate</p>
-                <p className="font-bold text-xl">${area?.hourly_rate}/hr</p>
+                <p className="font-bold text-xl">₹{area ? (area.hourly_rate * 83).toFixed(0) : 0}/hr</p>
               </div>
             </div>
           </div>
@@ -190,10 +190,10 @@ const Booking = () => {
             </div>
             <div className="flex items-center justify-between text-lg">
               <span className="font-semibold flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-primary" />
+                <IndianRupee className="w-5 h-5 text-primary" />
                 Total Amount
               </span>
-              <span className="font-bold text-2xl text-primary">${calculateTotal()}</span>
+              <span className="font-bold text-2xl text-primary">₹{calculateTotal()}</span>
             </div>
           </div>
         </Card>
@@ -205,7 +205,7 @@ const Booking = () => {
               disabled={booking}
               className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 h-14 text-lg"
             >
-              {booking ? "Confirming..." : `Confirm Booking - $${calculateTotal()}`}
+              {booking ? "Confirming..." : `Confirm Booking - ₹${calculateTotal()}`}
             </Button>
           </div>
         </div>
