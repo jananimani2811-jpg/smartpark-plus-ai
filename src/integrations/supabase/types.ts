@@ -226,7 +226,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      process_payment: {
+        Args: { _amount: number; _booking_id: string; _payment_method: string }
+        Returns: string
+      }
+      update_parking_slot_status: {
+        Args: { _booking_id?: string; _new_status: string; _slot_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

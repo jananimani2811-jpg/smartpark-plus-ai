@@ -51,44 +51,33 @@ const Payment = () => {
         return;
       }
 
-      // Get booking details
-      const { data: booking, error: bookingError } = await supabase
-        .from("bookings")
-        .select("*")
-        .eq("id", bookingId)
-        .single();
+      if (!booking) {
+        toast.error("Booking not found");
+        return;
+      }
 
-      if (bookingError) throw bookingError;
-
-      // Create payment record
-      const { error: paymentError } = await supabase
-        .from("payments")
-        .insert({
-          booking_id: bookingId,
-          user_id: user.id,
-          amount: booking.total_amount,
-          payment_method: selectedMethod,
-          status: "completed",
-        });
+      // Process payment using secure function
+      const { data: paymentId, error: paymentError } = await supabase.rpc("process_payment", {
+        _booking_id: bookingId!,
+        _payment_method: selectedMethod,
+        _amount: booking.total_amount,
+      });
 
       if (paymentError) throw paymentError;
 
-      // Update booking status
-      await supabase
-        .from("bookings")
-        .update({ status: "completed" })
-        .eq("id", bookingId);
-
-      // Update slot status
-      await supabase
-        .from("parking_slots")
-        .update({ status: "available" })
-        .eq("id", booking.parking_slot_id);
-
-      toast.success("Payment successful! Thank you for using SmartPark+");
-      setTimeout(() => navigate("/dashboard"), 2000);
+      if (selectedMethod === "wallet") {
+        toast.success("Payment successful! Thank you for using SmartPark+");
+        setTimeout(() => navigate("/dashboard"), 2000);
+      } else {
+        toast.success("Payment initiated! Awaiting confirmation for non-wallet payments.");
+        setTimeout(() => navigate("/dashboard"), 2000);
+      }
     } catch (error: any) {
-      toast.error(error.message || "Payment failed");
+      if (error.message?.includes("Insufficient wallet balance")) {
+        toast.error("Insufficient wallet balance. Please add funds or choose another payment method.");
+      } else {
+        toast.error(error.message || "Payment failed");
+      }
     } finally {
       setProcessing(false);
     }

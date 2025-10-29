@@ -81,11 +81,27 @@ const Booking = () => {
 
       if (bookingError) throw bookingError;
 
-      // Update slot status
-      await supabase
-        .from("parking_slots")
-        .update({ status: "reserved" })
-        .eq("id", slotId);
+      // Get the booking ID from the insert
+      const { data: newBooking, error: fetchError } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("parking_slot_id", slotId!)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Update slot status using secure function
+      const { error: slotError } = await supabase.rpc("update_parking_slot_status", {
+        _slot_id: slotId!,
+        _new_status: "reserved",
+        _booking_id: newBooking.id,
+      });
+
+      if (slotError) throw slotError;
 
       toast.success("Booking confirmed! Redirecting to payment...");
       setTimeout(() => navigate("/active-booking"), 1500);
