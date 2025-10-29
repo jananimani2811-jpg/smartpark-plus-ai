@@ -23,6 +23,7 @@ const Dashboard = () => {
   const [parkingAreas, setParkingAreas] = useState<ParkingArea[]>([]);
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,6 +31,12 @@ const Dashboard = () => {
     detectUserLocation();
     fetchParkingAreas();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchWalletBalance();
+    }
+  }, [user]);
 
   const detectUserLocation = () => {
     if ("geolocation" in navigator) {
@@ -69,6 +76,25 @@ const Dashboard = () => {
     }
     setUser(session.user);
     setLoading(false);
+  };
+
+  const fetchWalletBalance = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("wallet_balance")
+      .eq("id", user.id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching wallet balance:", error);
+      return;
+    }
+
+    if (data) {
+      setWalletBalance(data.wallet_balance || 0);
+    }
   };
 
   const fetchParkingAreas = async () => {
@@ -172,7 +198,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Wallet Balance</p>
-                <p className="text-2xl font-bold">₹4,150</p>
+                <p className="text-2xl font-bold">₹{walletBalance.toFixed(2)}</p>
               </div>
             </div>
           </Card>
